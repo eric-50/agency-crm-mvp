@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '../firebase'
+import AuthLoading from '../components/AuthLoading'
 import { useAuth } from '../context/AuthContext'
 
 const ERROR_MESSAGES = {
@@ -12,13 +13,14 @@ const ERROR_MESSAGES = {
 }
 
 export default function Login() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [mode, setMode] = useState('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  if (loading) return <AuthLoading />
   if (user) return <Navigate to="/" replace />
 
   const isSignUp = mode === 'signup'
