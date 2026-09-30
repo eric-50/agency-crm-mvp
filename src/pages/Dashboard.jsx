@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { signOut } from 'firebase/auth'
-import { addDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
+import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 
@@ -24,7 +24,8 @@ export default function Dashboard() {
   const [error, setError] = useState('')
 
   async function fetchLeads() {
-    const snapshot = await getDocs(leadsRef)
+    // Must match the firestore.rules ownership check, or the query is rejected.
+    const snapshot = await getDocs(query(leadsRef, where('createdBy', '==', user.uid)))
     const docs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     docs.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0))
     setLeads(docs)

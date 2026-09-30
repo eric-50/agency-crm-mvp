@@ -2,8 +2,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /leads/{leadId} {
-      // Any signed-in user can read and add leads (shared across the whole team).
-      allow read, create: if request.auth != null;
+      // Each user can only see and manage the leads they created.
+      allow read, delete: if request.auth != null
+        && resource.data.createdBy == request.auth.uid;
+
+      // New leads must be stamped with the creator's own uid and only the known fields.
+      allow create: if request.auth != null
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly(['name', 'email', 'createdAt', 'createdBy'])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.createdAt == request.time;
+
+      // Owners can't reassign a lead to someone else.
+      allow update: if request.auth != null
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid;
     }
   }
 }
